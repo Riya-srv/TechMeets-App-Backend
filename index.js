@@ -15,6 +15,46 @@ const corsOptions = {
 app.use(express.json());
 app.use(cors(corsOptions));
 
+app.post("/events", async (req, res) => {
+  try {
+    const {
+      title, date, startTime, endTime, type,
+      image, host, description, speakers,
+      price, dressCode, ageRestrictions, venue, tags
+    } = req.body;
+    if (!title || !date || !startTime || !endTime || !type || !image || !host || price === undefined) {
+      return res.status(400).json({ 
+        error: "Missing required fields: title, date, startTime, endTime, type, image, host, price"
+      });
+    }
+    const newEvent = new MeetUps({
+      title,
+      date,
+      startTime,
+      endTime,
+      type,
+      image,
+      host,
+      description,
+      speakers,
+      price,
+      dressCode,
+      ageRestrictions,
+      venue,
+      tags
+    });
+    const saved = await newEvent.save();
+    res.status(201).json({
+      message: "Event created successfully",
+      event: saved
+    });
+  } catch (error) {
+    console.error("Error creating event:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
 
 app.get("/events", async (req, res) => {
   try {
@@ -54,6 +94,34 @@ app.get("/events/type/:type", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch event by given type." });
   }
 });
+
+app.get("/events/:eventId", async (req, res) => {
+  try {
+    const event = await readEventById(req.params.eventId);
+
+    if (event) {
+      res.json(event);
+    } else {
+      res.status(404).json({ error: "Event no found." });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch event." });
+  }
+});
+
+app.delete("/events/id/:id", async (req, res) => {
+  try {
+    const deleted = await MeetUps.findByIdAndDelete(req.params.id);
+    if (deleted) {
+      res.status(200).json({ message: "Event deleted successfully" });
+    } else {
+      res.status(404).json({ error: "Event not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete event"});
+  }
+});
+
 
 
 const PORT = process.env.PORT || 3000;
