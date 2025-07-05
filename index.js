@@ -95,6 +95,16 @@ app.get("/events/type/:type", async (req, res) => {
   }
 });
 
+async function readEventById(eventId) {
+  try {
+    const event = await MeetUps.findById(eventId);
+
+    return event;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 app.get("/events/:eventId", async (req, res) => {
   try {
     const event = await readEventById(req.params.eventId);
@@ -102,7 +112,7 @@ app.get("/events/:eventId", async (req, res) => {
     if (event) {
       res.json(event);
     } else {
-      res.status(404).json({ error: "Event no found." });
+      res.status(404).json({ error: "Event not found." });
     }
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch event." });
